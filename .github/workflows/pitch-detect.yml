@@ -1,0 +1,50 @@
+name: Pitch Detection (A440)
+
+on:
+  push:
+    paths:
+      - "audio/**"
+      - "tools/**"
+  pull_request:
+    paths:
+      - "audio/**"
+      - "tools/**"
+  workflow_dispatch:
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Pitch Detection
+        run: |
+          mkdir -p results
+          python tools/pitch_detect.py \
+            --input-dir audio \
+            --output results/results.json \
+            --min-freq 50 \
+            --max-freq 2000
+
+      - name: Upload Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: pitch-results
+          path: results/results.json
